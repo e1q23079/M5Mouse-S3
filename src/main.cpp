@@ -89,7 +89,7 @@ void loop() {
 
     // マウスの移動量を計算
     int x = -1 * (yaw - preYaw) * MOUSE_SENSITIVITY_X;
-    int y = (roll - preRoll) * MOUSE_SENSITIVITY_Y;
+    int y = (pitch - prePitch) * MOUSE_SENSITIVITY_Y;
 
     // BLEマウスが接続されている場合
     if (bleMouse.isConnected()) {
