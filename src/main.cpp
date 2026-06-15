@@ -1,7 +1,11 @@
 #include <Arduino.h>
 #include <BleMouse.h>
+#include <M5PM1.h>
 #include <M5Unified.h>
 #include <MadgwickAHRS.h>
+
+// M5PM1のインスタンスを作成
+M5PM1 m5pm1;
 
 // マウス感度設定
 #define MOUSE_SENSITIVITY_X 5.0  // （左右移動）感度
@@ -46,7 +50,14 @@ void showDisplay(const char text[]) {
 // セットアップ関数
 void setup() {
     // M5StickCの初期化
-    M5.begin();
+    auto cfg = M5.config();
+    cfg.pmic_button = false;  // 電源ボタンをPMICに任せない
+    M5.begin(cfg);
+
+    // M5PM1の初期化
+    m5pm1.begin(&M5.In_I2C);
+    m5pm1.setSingleResetDisable(true);  // 単一リセットを無効化
+
     M5.Lcd.setRotation(1);
     M5.Lcd.setTextSize(2);
 
@@ -72,6 +83,13 @@ void setup() {
 void loop() {
     // IMUセンサーのデータを更新
     M5.update();
+
+    // M5PM1の状態を更新
+    bool pressed;
+    if (m5pm1.btnGetState(&pressed) == M5PM1_OK) {
+        M5.BtnPWR.setRawState(millis(),
+                              pressed);  // M5PM1の状態をM5.BtnPWRに反映
+    }
 
     // センサーからデータを取得
     M5.Imu.getAccelData(&ax, &ay, &az);
@@ -135,7 +153,7 @@ void loop() {
             }
         }
         //  電源ボタン
-        if (M5.Power.getKeyState() == 2) {
+        if (M5.BtnPWR.wasPressed()) {
             mouseStatus = !mouseStatus;
         }
     } else {
